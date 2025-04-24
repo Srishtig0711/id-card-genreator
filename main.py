@@ -1,20 +1,20 @@
 # module import
 import imgkit
 import cv2 as cv
-from barcode import Code39
+from barcode.codex import Code39
 from barcode.writer import ImageWriter
 
-# confrigrations
-path_wkthmltoimage = r'C:\\Users\\Studio\\PycharmProjects\\id_card_genreator\\kit\\bin\\wkhtmltoimage.exe'
+# configurations
+path_wkthmltoimage = r'C:\\Users\\srish\\PycharmProjects\\id_card_genreator\\kit\\bin\\wkhtmltoimage.exe'
 config = imgkit.config(wkhtmltoimage=path_wkthmltoimage)
 options = {'dpi': 365, 'margin-top': '0in', 'margin-bottom': '0in', 'margin-right': '0in', 'margin-left': '0in',
            'page-size': 'A8', "orientation": "Landscape", 'disable-smart-shrinking': ''}
 
 options = {'enable-local-file-access': None,"--quality": 100}
-def barcode(name,id):
-    my_code = Code39(name, writer=ImageWriter())
-    my_code.save("Barcodes/{id}".format(id=id))
-
+def generate_barcode(name, erp_number):
+    barcode_instance = Code39(str(erp_number), writer=ImageWriter(), add_checksum=False)
+    filename = barcode_instance.save(f"Barcodes/{name}_{erp_number}")
+    return filename
 
 def htmler(NAME, ID, BRANCH, DOB, Blood_group, Photo,Bar):
     html = r"""<!DOCTYPE html>
@@ -64,8 +64,8 @@ def htmler(NAME, ID, BRANCH, DOB, Blood_group, Photo,Bar):
     <body>
         <div class="face face-front" style="z-index:-1;"><img src="file:///c:\Users\Studio\PycharmProjects\id_card_genreator\front2.png"></div>
     
-    <div class="photo"><img src="file:///c:\Users\Studio\PycharmProjects\id_card_genreator\photos\@PHOTO" style="height: 83px;position: absolute;top: 75px;left: 10px;border: 1px solid #000;"></div>
-    <div class="barcode"><img src="file:///c:\Users\Studio\PycharmProjects\id_card_genreator\Barcodes\@Bar" style="height: 32px;position: absolute;top: 169px;left: 18px;"></div>
+    <div class="photo"><img src="file:///c:\Users\srish\PycharmProjects\id_card_genreator\photos\@PHOTO" style="height: 83px;position: absolute;top: 75px;left: 10px;border: 1px solid #000;"></div>
+    <div class="barcode"><img src="file:///c:\Users\srish\PycharmProjects\id_card_genreator\Barcodes\@Bar" style="height: 32px;position: absolute;top: 169px;left: 18px;"></div>
     <p id="name">Name :@NAME<br>
         ID : @ID <br>
         Branch : @BRANCH<br>
@@ -92,15 +92,9 @@ def htmler(NAME, ID, BRANCH, DOB, Blood_group, Photo,Bar):
     cv.imwrite(r"Ids/{id}.jpg".format(id=ID), crop_image)
 
 
-# barcode("Harsh Baheti","1339769")
-# htmler("Harsh Baheti", "1339769", "Computer Science", "22/09/2001", "AB+","photo.jpg","1339769"+".png")
-
-# output
-
-
 import csv
 with open('data.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
-        barcode(row["Name"],row["Erp Number"])
+        generate_barcode(row["Name"], row["Erp Number"])
         htmler(row["Name"],row["Erp Number"],row["Branch"],row["Date of Birth"],row["BLOOD GROUP"],row['photo for id card'],row["Erp Number"]+".png")
